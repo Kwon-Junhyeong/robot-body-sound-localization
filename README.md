@@ -14,7 +14,7 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 ## Conformal prediction
 
-`doa/conformal.py` turns the score map into a region that contains the true direction with probability 1 - alpha over answers. Each task sets its own risk level alpha. When the noise or the room changes, adaptive conformal prediction updates alpha after each answer, based on whether the region contained the true direction. A narrow region is passed on as an answer and a wide one is withheld. Withholding the widest 20% of regions lowered the share of answers more than 5 degrees off from 12% to 2.6%.
+`doa/conformal.py` turns the score map into a region built to contain the true direction with probability 1 - alpha. Each task sets its own risk level alpha. When the noise or the room changes, adaptive conformal prediction updates alpha after each answer, based on whether the region contained the true direction. A narrow region is passed on as an answer and a wide one is withheld. Withholding the widest 20% of regions lowered the share of answers more than 5 degrees off from 12% to 2.6%.
 
 ## Results
 
