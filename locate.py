@@ -1,6 +1,6 @@
 """Direction of a speaker in one 4-channel recording.
 
-usage: python locate.py TABLE.h5 RECORDING.wav [--mics 0 1 2 3]
+usage: python locate.py TABLE RECORDING.wav [--mics 0 1 2 3]
 """
 import argparse
 

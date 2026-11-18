@@ -15,7 +15,7 @@ PROMINENCE_MIN = 6.644
 def load_table(path, mics, device):
     """BEM table to unit cross-spectra per direction.
 
-    .npz from bem/h_table_generator_gpu.py (H: direction x freq x mic), or .h5 (p: mic x direction x freq).
+    .npz from bem/make_table.py (H: direction x freq x mic), or .h5 (p: mic x direction x freq).
     """
     mics = np.asarray(mics)
     if str(path).endswith(".npz"):
