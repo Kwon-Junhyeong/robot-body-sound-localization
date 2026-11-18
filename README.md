@@ -6,7 +6,7 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 ## Microphone responses computed from the body's shape
 
-`bem/h_table_generator_gpu.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training.
+`bem/make_table.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training.
 
 ## Matching with a confidence gate
 
@@ -20,12 +20,10 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 On 4,000 simulated reverberant recordings of 0.5 s, 87.2% of the direction estimates are within 5 degrees, against 50.6% with a free-field table. With 1.0 s of audio the mean error is 1.23 degrees. On a 3D-printed test body, a source at 90 degrees is found at 89 degrees.
 
-![Accuracy on simulated recordings](docs/accuracy.png)
-
 ## Run
 
 ```sh
 pip install -r requirements.txt
-python bem/h_table_generator_gpu.py              # set the body and microphones at the top; writes h_table.npz
-python locate.py h_table.npz RECORDING.wav       # 16 kHz, 4 channels
+python bem/make_table.py                     # set the body and microphones at the top; writes h_table.npz
+python locate.py h_table.npz RECORDING.wav   # 16 kHz, 4 channels
 ```
