@@ -6,7 +6,7 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 ## Microphone responses computed from the body's shape
 
-`bem/make_table.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training.
+`bem/make_table.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training. A later version of this solver is released as [stl2bem](https://github.com/Kwon-Junhyeong/stl2bem); it takes any closed STL mesh and runs on the CPU or GPU.
 
 ## Matching with a confidence gate
 
