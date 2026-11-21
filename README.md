@@ -10,7 +10,7 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 ## Matching with a confidence gate
 
-`doa/matcher.py` scores every direction in the table against the phase-only cross-spectra of the four microphones. It returns a direction only when the phase closure of the four microphones and the prominence of the peak both meet their thresholds, and abstains otherwise.
+`doa/matcher.py` is SRP-PHAT with the body's responses in place of free-field steering: it scores every direction in the table against the phase-only cross-spectra of the four microphones. It returns a direction only when the phase closure of the four microphones and the prominence of the peak both meet their thresholds, and abstains otherwise.
 
 ## Conformal prediction
 
@@ -18,7 +18,7 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 ## Results
 
-On 4,000 simulated reverberant recordings of 0.5 s, 87.2% of the direction estimates are within 5 degrees, against 50.6% with a free-field table. With 1.0 s of audio the mean error is 1.23 degrees. On a 3D-printed test body, a source at 90 degrees is found at 89 degrees.
+On 4,000 simulated reverberant recordings of 0.5 s, 87.2% of the direction estimates are within 5 degrees, against 50.6% with a free-field table. With 1.0 s of audio the mean error is 1.23 degrees. On a 3D-printed box with four microphones, recorded from 264 directions (2,437 one-second windows), the median error is 3.1 degrees and no estimate is more than 30 degrees off. With a free-field table the median is 5.0 degrees and 20% of the estimates are more than 30 degrees off.
 
 ## Run
 
