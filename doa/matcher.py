@@ -29,7 +29,8 @@ def load_table(path, mics, device):
             grid = f["doa_grid"][:].astype(np.float32)
     n = len(mics)
     pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
-    flat = np.concatenate([p[i] * np.conj(p[j]) for i, j in pairs], axis=1)
+    # the table uses the e^{+jwt} convention and the STFT e^{-jwt}, hence conj(p_i) p_j
+    flat = np.concatenate([np.conj(p[i]) * p[j] for i, j in pairs], axis=1)
     flat /= np.abs(flat) + 1e-12
     return {"flat": torch.from_numpy(flat), "grid": torch.from_numpy(grid).to(device), "pairs": pairs}
 

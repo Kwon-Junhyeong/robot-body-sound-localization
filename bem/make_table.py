@@ -1,5 +1,6 @@
 # BEM table of a rigid body with microphones on it (GPU).
-# For every direction and frequency: H = p_total / p_inc at each microphone.
+# For every direction and frequency: the total pressure at each microphone for a unit plane wave
+# whose phase is zero at the origin.
 # Requires CuPy for your CUDA version, e.g. pip install cupy-cuda12x
 
 import numpy as np
@@ -123,12 +124,15 @@ def find_nearest_elements(mic_pos, centroids, max_dist=10e-3):
 
 
 def compute_h_table(freqs, doa_grid, centroids, normals, areas, mic_pos, c=C_SOUND, doa_chunk=DOA_CHUNK):
-    """(0.5 I + M) p_total = p_inc for every direction; one LU factorization per frequency. Returns (doa, freq, mic)."""
+    """(0.5 I + M) p_total = p_inc for every direction; one LU factorization per frequency.
+
+    Returns p_total at the microphones, (doa, freq, mic).
+    """
     from tqdm import tqdm
     n, n_doa, n_mic = len(centroids), len(doa_grid), len(mic_pos)
     mic_idx = find_nearest_elements(mic_pos, centroids)
     cen, nor, are = cp.asarray(centroids), cp.asarray(normals), cp.asarray(areas)
-    grid, mics = cp.asarray(doa_grid), cp.asarray(mic_pos)
+    grid = cp.asarray(doa_grid)
     H = np.zeros((n_doa, len(freqs), n_mic), dtype=np.complex128)
     pool = cp.get_default_memory_pool()
     for i, f in tqdm(enumerate(freqs), total=len(freqs), desc="BEM"):
@@ -136,17 +140,17 @@ def compute_h_table(freqs, doa_grid, centroids, normals, areas, mic_pos, c=C_SOU
             H[:, i, :] = 1.0
             continue
         k = 2.0 * cp.pi * f / c
-        A = 0.5 * cp.eye(n, dtype=cp.complex128) + assemble_M(k, cen, nor, are)
+        A = assemble_M(k, cen, nor, are)
+        cp.fill_diagonal(A, 0.5)
         lu, piv = cpx_la.lu_factor(A, overwrite_a=True)
         del A
-        p_inc_mics = cp.exp(1j * k * (grid @ mics.T)).T
         for d0 in range(0, n_doa, doa_chunk):
             d1 = min(d0 + doa_chunk, n_doa)
             p_inc = cp.exp(1j * k * (grid[d0:d1] @ cen.T)).T
             p_total = cpx_la.lu_solve((lu, piv), p_inc, overwrite_b=True)
-            H[d0:d1, i, :] = cp.asnumpy((p_total[mic_idx, :] / p_inc_mics[:, d0:d1]).T)
+            H[d0:d1, i, :] = cp.asnumpy(p_total[mic_idx, :].T)
             del p_inc, p_total
-        del lu, piv, p_inc_mics
+        del lu, piv
         pool.free_all_blocks()
     return H
 
