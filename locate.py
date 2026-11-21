@@ -21,6 +21,6 @@ table = matcher.load_table(a.table, a.mics, device)
 fs, x = wavfile.read(a.wav)
 assert fs == matcher.FS and x.ndim == 2 and x.shape[1] >= 4, "16 kHz, 4 channels"
 x = x[:, :4].T.astype(np.float32)[None]
-direction, _, answer = matcher.locate(torch.from_numpy(x).to(device), table)
+direction, _ = matcher.locate(torch.from_numpy(x).to(device), table)
 az, el = matcher.azimuth_elevation(direction.cpu().numpy()[0])
-print(f"azimuth {az:.1f} deg, elevation {el:.1f} deg, {'answer' if answer[0] else 'abstain'}")
+print(f"azimuth {az:.1f} deg, elevation {el:.1f} deg")

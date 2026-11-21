@@ -8,9 +8,9 @@ Finds the azimuth and elevation of a speaker with four microphones on a robot bo
 
 `bem/make_table.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training. A later version of this solver is released as [stl2bem](https://github.com/Kwon-Junhyeong/stl2bem); it takes any closed STL mesh and runs on the CPU or GPU.
 
-## Matching with a confidence gate
+## Matching the recording to the table
 
-`doa/matcher.py` is SRP-PHAT with the body's responses in place of free-field steering: it scores every direction in the table against the phase-only cross-spectra of the four microphones. It returns a direction only when the phase closure of the four microphones and the prominence of the peak both meet their thresholds, and abstains otherwise.
+`doa/matcher.py` is SRP-PHAT with the body's responses in place of free-field steering: it scores every direction in the table against the phase-only cross-spectra of the four microphones. The direction with the highest score is the estimate.
 
 ## Conformal prediction
 

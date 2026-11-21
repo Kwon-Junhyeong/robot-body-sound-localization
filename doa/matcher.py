@@ -7,10 +7,6 @@ FS = 16000
 NFFT = 512
 HOP = 256
 
-# two-score gate: answer only when both scores pass
-CLOSURE_MAX = 1.367
-PROMINENCE_MIN = 6.644
-
 
 def load_table(path, mics, device):
     """BEM table to unit cross-spectra per direction.
@@ -55,25 +51,12 @@ def match(obs, table, chunk=8192):
     return scores
 
 
-def prominence(scores):
-    return (scores.max(-1).values - scores.mean(-1)) / (scores.std(-1) + 1e-9)
-
-
-def closure(obs):
-    """Phase closure residual of the four microphones, in radians (pairs 01 02 03 12 13 23)."""
-    u = obs / (obs.abs() + 1e-12)
-    triplets = [(0, 3, 1), (0, 4, 2), (1, 5, 2), (3, 5, 4)]
-    return sum((u[:, a] * u[:, b] * u[:, c].conj()).angle().abs().mean(-1) for a, b, c in triplets) / 4
-
-
 @torch.no_grad()
 def locate(wav, table):
-    """Direction (unit vector), score map and the gate decision for each recording in the batch."""
+    """Direction (unit vector) and score map for each recording in the batch."""
     obs = cross_spectra(wav, table["pairs"])
     scores = match(obs, table)
-    direction = table["grid"][scores.argmax(-1)]
-    answer = (closure(obs) <= CLOSURE_MAX) & (prominence(scores) >= PROMINENCE_MIN)
-    return direction, scores, answer
+    return table["grid"][scores.argmax(-1)], scores
 
 
 def azimuth_elevation(d):
