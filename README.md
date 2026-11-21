@@ -1,29 +1,32 @@
 # Robot Body Sound Localization
 
-Finds the azimuth and elevation of a speaker with four microphones on a robot body. The body scatters the sound before it reaches the microphones, so free-field methods and networks trained without that scattering lose accuracy on the robot. Here the microphone responses are computed from the body's shape and matched to the recording, with no training. Research internship at the KIST AI and Robotics Institute, Humanoid Research Center (2026).
+Finds the direction of a speaker with four microphones on a robot body. The body scatters the sound before it reaches the microphones, so free-field methods lose accuracy on the robot. Here the microphone responses come from a boundary element model of the body and are used twice: to localize with SRP-PHAT, and to synthesize the audio that networks are trained on. Research internship at the KIST AI and Robotics Institute, Humanoid Research Center (2026).
 
 ![System](docs/system.png)
 
-## Microphone responses computed from the body's shape
+## SRP-PHAT with the body's responses
 
-`bem/make_table.py` computes the sound pressure on the body surface with the boundary element method on a GPU, once per body and microphone layout, and stores one response per direction. A new body needs a new table, not new training. A later version of this solver is released as [stl2bem](https://github.com/Kwon-Junhyeong/stl2bem); it takes any closed STL mesh and runs on the CPU or GPU.
+`srp/build_lookup.py` turns a BEM table into templates: for every direction, the unit cross-spectra of the six microphone pairs. `srp/srp_mag_aware.py` scores every direction against the cross-spectra of the recording, and the estimate is the peak over the 48 strongest frames. Nothing is trained. The matcher can also score the level differences between the microphones, which the body's shadow creates; the results below use the phase score alone.
 
-## Matching the recording to the table
+The BEM tables come from an earlier version of [stl2bem](https://github.com/Kwon-Junhyeong/stl2bem). The matcher that uses microphone-pair ratios is in [calibration-free-sound-localization](https://github.com/Kwon-Junhyeong/calibration-free-sound-localization).
 
-`doa/matcher.py` is SRP-PHAT with the body's responses in place of free-field steering: it scores every direction in the table against the phase-only cross-spectra of the four microphones. The direction with the highest score is the estimate.
+## Training audio through the body
 
-## Conformal prediction
-
-`doa/conformal.py` turns the score map into a region built to contain the true direction with probability 1 - alpha. Each task sets its own risk level alpha. When the noise or the room changes, adaptive conformal prediction updates alpha after each answer, based on whether the region contained the true direction. A narrow region is passed on as an answer and a wide one is withheld. Withholding the widest 20% of regions lowered the share of answers more than 5 degrees off from 12% to 2.6%.
+`synthesis/generate_data.py` writes one-second, four-channel scenes with their true directions: LibriSpeech speech in a random room, with a reverberation time of 0.2 to 1.3 s and diffuse NOISEX-92 noise at -5 to 15 dB SNR. The room is simulated with image sources, and every image source passes through the body's response for its own arrival direction (`synthesis/reverb_synth.py`), so the reflections are scattered by the body as well as the direct sound. The same scenes with a free-field table of the same microphones give the comparison data.
 
 ## Results
 
-On 4,000 simulated reverberant recordings of 0.5 s, 87.2% of the direction estimates are within 5 degrees, against 50.6% with a free-field table. With 1.0 s of audio the mean error is 1.23 degrees. On a 3D-printed box with four microphones, recorded from 264 directions (2,437 one-second windows), the median error is 3.1 degrees and no estimate is more than 30 degrees off. With a free-field table the median is 5.0 degrees and 20% of the estimates are more than 30 degrees off.
+On a 3D-printed box with four microphones, recorded from 264 directions (2,437 one-second windows), the median error is 3.0 degrees with the body's templates, and no estimate is more than 30 degrees off. With free-field templates of the same microphones the median is 4.6 degrees, and 11% of the estimates are more than 30 degrees off. Nothing was trained or tuned on these recordings.
+
+![Estimates within an error on the measured box](docs/measured.png)
 
 ## Run
 
 ```sh
 pip install -r requirements.txt
-python bem/make_table.py                     # set the body and microphones at the top; writes h_table.npz
-python locate.py h_table.npz RECORDING.wav   # 16 kHz, 4 channels
+python srp/build_lookup.py BEM_TABLE.h5 templates.npz
+python locate.py templates.npz RECORDING.wav          # 16 kHz, 4 channels
+python synthesis/generate_data.py --bem_dir TABLES --libri_root LIBRISPEECH --noise_dir NOISEX92 --out_dir OUT
 ```
+
+The BEM tables, the recordings and the speech and noise corpora are not part of the repository.

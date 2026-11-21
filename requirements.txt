@@ -1,6 +1,7 @@
 numpy
 scipy
-h5py
 torch
+h5py
+soundfile
+pyroomacoustics
 tqdm
-cupy-cuda12x
